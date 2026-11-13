@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:e_commerce/app/core/theme/app_colors.dart';
-import 'package:e_commerce/app/routes/app_pages.dart';
+
+import '../../../widgets/cart_badge.dart';
 import '../controllers/wishlist_controller.dart';
 
 class WishlistView extends GetView<WishlistController> {
@@ -9,181 +9,42 @@ class WishlistView extends GetView<WishlistController> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Data mockup wishlist untuk template UI
-    final mockWishlist = [
-      {
-        'title': 'Nike Air Jordan 1 Retro High',
-        'category': 'Basketball',
-        'price': 'Rp 2.499.000',
-        'rating': 4.9,
-        'image': 'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=500&q=80',
-      },
-      {
-        'title': 'New Balance 574 Core Grey',
-        'category': 'Lifestyle',
-        'price': 'Rp 1.499.000',
-        'rating': 4.8,
-        'image': 'https://images.unsplash.com/photo-1539185441755-769473a23570?w=500&q=80',
-      },
-      {
-        'title': 'Vans Old Skool Classic Skate',
-        'category': 'Skate',
-        'price': 'Rp 999.000',
-        'rating': 4.7,
-        'image': 'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=500&q=80',
-      },
-    ];
-
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Get.back(),
-        ),
-        title: const Text('Wishlist Favorit'),
-        actions: [
-          // Indikator Fitur Offline Hive CE
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.success.withAlpha(30),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.offline_pin_rounded, color: AppColors.success, size: 14),
-                SizedBox(width: 4),
-                Text(
-                  'Offline Ready',
-                  style: TextStyle(
-                    color: AppColors.success,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: mockWishlist.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final item = mockWishlist[index];
-          return Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurfaceCard : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-              ),
-            ),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    width: 85,
-                    height: 85,
-                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                    child: Image.network(
-                      item['image'] as String,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item['title'] as String,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item['category'] as String,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        item['price'] as String,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
+      appBar: AppBar(title: const Text('Wishlist'), actions: const [CartBadge()]),
+      body: Obx(() {
+        final items = controller.wishlistItems;
+        if (items.isEmpty) {
+          return const Center(child: Text('Belum ada sepatu favorit'));
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: items.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, i) {
+            final p = items[i];
+            return Card(
+              child: ListTile(
+                leading: const Icon(Icons.directions_run, size: 36),
+                title: Text(p.name),
+                subtitle: Text(p.formattedPrice),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.favorite_rounded, color: AppColors.error),
-                      onPressed: () {
-                        Get.snackbar(
-                          'Dihapus',
-                          '${item['title']} dihapus dari wishlist.',
-                          snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: AppColors.darkSurfaceCard,
-                          colorText: Colors.white,
-                          margin: const EdgeInsets.all(16),
-                          borderRadius: 12,
-                        );
-                      },
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () => controller.removeFromWishlist(p.id),
                     ),
-                    InkWell(
-                      onTap: () {
-                        Get.snackbar(
-                          'Keranjang',
-                          '${item['title']} dipindahkan ke keranjang belanja!',
-                          snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: AppColors.success,
-                          colorText: Colors.white,
-                          margin: const EdgeInsets.all(16),
-                          borderRadius: 12,
-                        );
-                        Get.toNamed(Routes.CART);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.add_shopping_cart_rounded,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                      ),
+                    FilledButton(
+                      onPressed: () => controller.moveToCart(p),
+                      child: const Text('Ke Keranjang'),
                     ),
                   ],
                 ),
-              ],
-            ),
-          );
-        },
-      ),
+              ),
+            );
+          },
+        );
+      }),
     );
   }
 }

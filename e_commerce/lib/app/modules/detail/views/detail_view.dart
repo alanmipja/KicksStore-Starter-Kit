@@ -1,324 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
-import 'package:e_commerce/app/core/theme/app_colors.dart';
-import 'package:e_commerce/app/modules/detail/controllers/detail_controller.dart';
-import 'package:e_commerce/app/routes/app_pages.dart';
+import '../../../widgets/cart_badge.dart';
+import '../controllers/detail_controller.dart';
 
-/// Halaman Detail Produk KicksStore (Sesi 02: Full Reaktif via DetailController)
 class DetailView extends GetView<DetailController> {
   const DetailView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final currencyFormatter = NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    );
-
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Get.back(),
-        ),
-        title: const Text('Detail Produk'),
-        actions: [
-          // Sesi 02: Tombol Wishlist Reaktif
-          Obx(
-            () => IconButton(
-              tooltip: 'Simpan ke Favorit',
-              icon: Icon(
-                controller.isFavorite.value
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-                color: controller.isFavorite.value ? AppColors.error : null,
-              ),
-              onPressed: controller.toggleFavorite,
-            ),
-          ),
-          IconButton(
-            tooltip: 'Buka Keranjang',
-            icon: const Icon(Icons.shopping_bag_outlined),
-            onPressed: () => Get.toNamed(Routes.CART),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Detail Produk'), actions: const [CartBadge()]),
       body: Obx(() {
-        final product = controller.product;
-        final price = product['price'];
-        final formattedPrice = price is num
-            ? currencyFormatter.format(price)
-            : (price?.toString() ?? 'Rp 0');
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Galeri Foto Produk Utama
-              Container(
-                height: 280,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkSurfaceCard
-                      : const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color:
-                        isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                  ),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Image.network(
-                    product['imageUrl'] as String? ?? '',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Center(
-                      child: Icon(
-                        Icons.image_not_supported_outlined,
-                        size: 64,
-                        color: isDark
-                            ? AppColors.darkTextMuted
-                            : AppColors.lightTextMuted,
-                      ),
-                    ),
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Kategori Badge & Rating Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(30),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      product['category'] as String? ?? 'Sneakers',
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.star_rounded,
-                        size: 20,
-                        color: AppColors.accent,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${product['rating'] ?? 4.9} / 5.0 (${product['reviewCount'] ?? 120}+ ulasan)',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Nama Produk & Harga Satuan
-              Text(
-                product['name'] as String? ?? 'Sneakers Premium',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
-                  height: 1.2,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                formattedPrice,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Pemilih Ukuran Sepatu (Size Selector Reaktif Sesi 02)
-              Text(
-                'Pilih Ukuran (EU)',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 10,
-                children: controller.availableSizes.map((size) {
-                  return Obx(() {
-                    final isSelected = controller.selectedSize.value == size;
-                    return ChoiceChip(
-                      label: Text(size),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        if (selected) controller.changeSize(size);
-                      },
-                      labelStyle: TextStyle(
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.w600,
-                        color: isSelected
-                            ? Colors.white
-                            : (isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary),
-                      ),
-                      selectedColor: AppColors.primary,
-                      backgroundColor:
-                          isDark ? AppColors.darkSurfaceCard : Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: BorderSide(
-                          color: isSelected
-                              ? AppColors.primary
-                              : (isDark
-                                  ? AppColors.darkBorder
-                                  : AppColors.lightBorder),
-                        ),
-                      ),
-                    );
-                  });
-                }).toList(),
-              ),
-              const SizedBox(height: 24),
-
-              // Deskripsi Produk
-              Text(
-                'Deskripsi Produk',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                product['description'] as String? ??
-                    'Sneakers berkualitas tinggi dengan bantalan responsif, material premium pilihan, dan kenyamanan optimal untuk aktivitas kasual maupun olahraga.',
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.6,
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
-                ),
-              ),
-              const SizedBox(height: 100),
-            ],
-          ),
-        );
-      }),
-      // Sticky Bottom Action Bar
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurfaceCard : Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(20),
-              blurRadius: 10,
-              offset: const Offset(0, -4),
+        final p = controller.product.value;
+        if (p == null) return const Center(child: Text('Produk tidak ditemukan'));
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const Icon(Icons.directions_run, size: 120),
+            const SizedBox(height: 12),
+            Text(p.name, style: Theme.of(context).textTheme.headlineSmall),
+            Text(p.formattedPrice,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.deepOrange)),
+            const SizedBox(height: 8),
+            Text(p.description),
+            const SizedBox(height: 16),
+            const Text('Ukuran', style: TextStyle(fontWeight: FontWeight.bold)),
+            Wrap(
+              spacing: 8,
+              children: p.sizes
+                  .map((s) => ChoiceChip(
+                        label: Text(s),
+                        selected: controller.selectedSize.value == s,
+                        onSelected: (_) => controller.selectedSize.value = s,
+                      ))
+                  .toList(),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Text('Jumlah', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Spacer(),
+                IconButton(icon: const Icon(Icons.remove_circle_outline), onPressed: controller.decrement),
+                Text('${controller.quantity.value}', style: const TextStyle(fontSize: 18)),
+                IconButton(icon: const Icon(Icons.add_circle_outline), onPressed: controller.increment),
+              ],
             ),
           ],
-        ),
-        child: SafeArea(
-          child: Row(
-            children: [
-              // Sesi 02: Quantity Stepper Counter Reaktif (Obx)
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color:
-                        isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove_rounded, size: 18),
-                      onPressed: controller.decrementQuantity,
-                    ),
-                    Obx(
-                      () => Text(
-                        '${controller.quantity.value}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add_rounded, size: 18),
-                      onPressed: controller.incrementQuantity,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 14),
-
-              // Sesi 02: Tombol Tambah ke Keranjang CTA
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: controller.addToCart,
-                  icon: const Icon(Icons.add_shopping_cart_rounded, size: 20),
-                  label: const Text(
-                    'Tambah Keranjang',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+        );
+      }),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: FilledButton.icon(
+            onPressed: controller.addToCart,
+            icon: const Icon(Icons.add_shopping_cart),
+            label: const Text('Tambah ke Keranjang'),
           ),
         ),
       ),
