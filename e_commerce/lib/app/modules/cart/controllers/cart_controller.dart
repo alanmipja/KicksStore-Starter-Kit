@@ -7,12 +7,21 @@ class CartController extends GetxController {
   final items = <CartItemModel>[].obs;
 
   void addItem(ProductModel product, {int quantity = 1, String size = '42'}) {
-    final newItem = CartItemModel(product: product, selectedSize: size, quantity: quantity);
-    final index = items.indexWhere((e) => e.id == newItem.id);
+    final itemId = '${product.id}_$size';
+    final index = items.indexWhere((item) => item.id == itemId);
     if (index >= 0) {
-      items[index] = items[index].copyWith(quantity: items[index].quantity + quantity);
+      items[index] = items[index].copyWith(
+        quantity: items[index].quantity + quantity,
+      );
     } else {
-      items.add(newItem);
+      items.add(
+        CartItemModel(
+          id: itemId,
+          product: product,
+          selectedSize: size,
+          quantity: quantity,
+        ),
+      );
     }
   }
 

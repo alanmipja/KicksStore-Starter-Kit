@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
-import '../../../data/models/product_model.dart';
 import '../controllers/cart_controller.dart';
 
 class CartView extends GetView<CartController> {
@@ -55,7 +55,7 @@ class CartView extends GetView<CartController> {
               child: ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: controller.items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, i) {
                   final item = controller.items[i];
                   return Card(
@@ -108,12 +108,18 @@ class CartView extends GetView<CartController> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _row('Subtotal', formatRupiah(controller.subtotal)),
-                    _row('PPN 11%', formatRupiah(controller.tax)),
+                    _row('Subtotal', _formatRupiah(controller.subtotal)),
+                    _row('PPN 11%', _formatRupiah(controller.tax)),
                     _row('Ongkos Kirim',
-                        controller.shippingFee == 0 ? 'Gratis' : formatRupiah(controller.shippingFee)),
+                        controller.shippingFee == 0
+                            ? 'Gratis'
+                            : _formatRupiah(controller.shippingFee)),
                     const Divider(),
-                    _row('Total Pembayaran', formatRupiah(controller.totalAmount), bold: true),
+                    _row(
+                      'Total Pembayaran',
+                      _formatRupiah(controller.totalAmount),
+                      bold: true,
+                    ),
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
@@ -132,3 +138,9 @@ class CartView extends GetView<CartController> {
     );
   }
 }
+
+String _formatRupiah(int amount) => NumberFormat.currency(
+  locale: 'id_ID',
+  symbol: 'Rp ',
+  decimalDigits: 0,
+).format(amount);
