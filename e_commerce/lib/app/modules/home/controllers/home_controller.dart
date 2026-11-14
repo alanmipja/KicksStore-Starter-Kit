@@ -1,13 +1,23 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:e_commerce/app/core/network/result.dart';
+import 'package:e_commerce/app/core/theme/app_colors.dart';
 import 'package:e_commerce/app/data/models/product_model.dart';
+import 'package:e_commerce/app/data/repository/product_repository.dart';
 import 'package:e_commerce/app/modules/cart/controllers/cart_controller.dart';
 import 'package:e_commerce/app/routes/app_pages.dart';
 
 class HomeController extends GetxController {
+  HomeController(this._productRepository);
+
+  final ProductRepository _productRepository;
+
   final selectedCategory = 'Semua'.obs;
   final favoriteIds = <String>{}.obs;
   final categories = const ['Semua', 'Running', 'Basketball', 'Lifestyle'];
+  final isLoading = false.obs;
+  final errorMessage = ''.obs;
 
   final products = <ProductModel>[
     const ProductModel(
@@ -60,6 +70,51 @@ class HomeController extends GetxController {
     ),
   ].obs;
 
+  @override
+  void onInit() {
+    super.onInit();
+    fetchProducts();
+  }
+
+  Future<void> fetchProducts() async {
+    final hadVisibleProducts = products.isNotEmpty;
+    isLoading.value = true;
+    errorMessage.value = '';
+
+    try {
+      final result = await _productRepository.fetchProducts();
+
+      switch (result) {
+        case Success(data: final remoteProducts):
+          products.assignAll(remoteProducts);
+          Get.snackbar(
+            'Katalog Berhasil Diperbarui',
+            'Berhasil mengunduh ${remoteProducts.length} sepatu terbaru dari server!',
+            backgroundColor: AppColors.success,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 2),
+            icon: const Icon(Icons.cloud_done_rounded, color: Colors.white),
+          );
+        case Failure(error: final error):
+          errorMessage.value = error;
+          if (hadVisibleProducts) {
+            Get.snackbar(
+              'Mode Offline',
+              'Koneksi ke server terputus. Produk yang sudah tampil tetap tersedia.',
+              backgroundColor: AppColors.error,
+              colorText: Colors.white,
+              snackPosition: SnackPosition.BOTTOM,
+              duration: const Duration(seconds: 2),
+              icon: const Icon(Icons.wifi_off_rounded, color: Colors.white),
+            );
+          }
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   CartController get cartController {
     if (Get.isRegistered<CartController>()) {
       return Get.find<CartController>();
@@ -73,9 +128,7 @@ class HomeController extends GetxController {
     final category = selectedCategory.value;
     if (category == 'Semua') return products.toList();
 
-    return products
-        .where((product) => product.category == category)
-        .toList();
+    return products.where((product) => product.category == category).toList();
   }
 
   bool isFavorite(String productId) => favoriteIds.contains(productId);

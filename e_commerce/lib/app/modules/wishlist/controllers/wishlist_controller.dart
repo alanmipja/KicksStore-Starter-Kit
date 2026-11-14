@@ -1,13 +1,14 @@
 import 'package:get/get.dart';
 
 import '../../../data/models/product_model.dart';
+import '../../../data/repository/product_repository.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../home/controllers/home_controller.dart';
 
 class WishlistController extends GetxController {
   HomeController get homeController => Get.isRegistered<HomeController>()
       ? Get.find<HomeController>()
-      : Get.put(HomeController());
+      : Get.put(HomeController(Get.find<ProductRepository>()));
 
   CartController get cartController => Get.isRegistered<CartController>()
       ? Get.find<CartController>()

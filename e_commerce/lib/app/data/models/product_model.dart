@@ -67,6 +67,44 @@ class ProductModel {
     );
   }
 
+  factory ProductModel.fromJson(Map<String, dynamic> json) {
+    final rawId = json['id'];
+    final rawName = json['title'] ?? json['name'] ?? 'Sepatu Sneakers';
+    final rawCategory = (json['category'] ?? 'Lifestyle').toString().trim();
+    final rawPrice = _parseNumber(json['price'])?.toInt() ?? 150000;
+    final reviews = json['reviews'];
+    final reviewCount = reviews is List
+        ? reviews.length
+        : _parseNumber(json['reviewCount'])?.toInt() ?? 0;
+
+    return ProductModel(
+      id: rawId?.toString() ?? 'prod-${DateTime.now().millisecondsSinceEpoch}',
+      name: rawName.toString(),
+      category: rawCategory.isEmpty
+          ? 'General'
+          : '${rawCategory[0].toUpperCase()}${rawCategory.substring(1)}',
+      price: rawPrice < 1000 ? rawPrice * 15000 : rawPrice,
+      rating: _parseNumber(json['rating'])?.toDouble() ?? 4.8,
+      reviewCount: reviewCount,
+      imageUrl:
+          (json['thumbnail'] ??
+                  json['imageUrl'] ??
+                  'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80')
+              .toString(),
+      description:
+          (json['description'] ?? 'Sepatu sneakers berkualitas tinggi.')
+              .toString(),
+      isFavorite: json['isFavorite'] is bool
+          ? json['isFavorite'] as bool
+          : false,
+    );
+  }
+
+  static num? _parseNumber(Object? value) {
+    if (value is num) return value;
+    return num.tryParse(value?.toString() ?? '');
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
