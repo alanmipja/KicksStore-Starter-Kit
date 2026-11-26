@@ -73,6 +73,9 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    favoriteIds.assignAll(
+      _productRepository.getWishlist().map((product) => product.id),
+    );
     fetchProducts();
   }
 
@@ -133,9 +136,26 @@ class HomeController extends GetxController {
 
   bool isFavorite(String productId) => favoriteIds.contains(productId);
 
-  void toggleFavorite(String productId) {
-    if (!favoriteIds.remove(productId)) {
+  Future<void> toggleFavorite(String productId) async {
+    final product = products.firstWhereOrNull((item) => item.id == productId);
+    if (product == null) return;
+
+    final isNowFavorite = await _productRepository.toggleWishlist(product);
+    if (isNowFavorite) {
       favoriteIds.add(productId);
+      Get.snackbar(
+        'Disimpan ke Wishlist',
+        'Sepatu berhasil ditambahkan ke daftar favorit!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF4F46E5).withValues(alpha: 0.9),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+        duration: const Duration(seconds: 2),
+        icon: const Icon(Icons.favorite, color: Colors.white),
+      );
+    } else {
+      favoriteIds.remove(productId);
     }
   }
 

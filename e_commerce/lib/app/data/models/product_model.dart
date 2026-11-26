@@ -1,14 +1,27 @@
 import 'package:intl/intl.dart';
+import 'package:hive_ce/hive.dart';
 
+part 'product_model.g.dart';
+
+@HiveType(typeId: 0)
 class ProductModel {
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String name;
+  @HiveField(2)
   final String category;
+  @HiveField(3)
   final int price;
+  @HiveField(4)
   final double rating;
+  @HiveField(5)
   final int reviewCount;
+  @HiveField(6)
   final String imageUrl;
+  @HiveField(7)
   final String description;
+  @HiveField(8)
   final bool isFavorite;
 
   const ProductModel({

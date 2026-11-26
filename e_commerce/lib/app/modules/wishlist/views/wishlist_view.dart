@@ -10,7 +10,21 @@ class WishlistView extends GetView<WishlistController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Wishlist'), actions: const [CartBadge()]),
+      appBar: AppBar(
+        title: const Text('Wishlist'),
+        actions: [
+          Obx(
+            () => controller.wishlistItems.isEmpty
+                ? const SizedBox.shrink()
+                : IconButton(
+                    tooltip: 'Kosongkan Wishlist',
+                    icon: const Icon(Icons.delete_sweep_outlined),
+                    onPressed: controller.clearWishlist,
+                  ),
+          ),
+          const CartBadge(),
+        ],
+      ),
       body: Obx(() {
         final items = controller.wishlistItems;
         if (items.isEmpty) {
@@ -19,7 +33,7 @@ class WishlistView extends GetView<WishlistController> {
         return ListView.separated(
           padding: const EdgeInsets.all(16),
           itemCount: items.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          separatorBuilder: (_, _) => const SizedBox(height: 8),
           itemBuilder: (context, i) {
             final p = items[i];
             return Card(

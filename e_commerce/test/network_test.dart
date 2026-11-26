@@ -15,6 +15,18 @@ class _FakeProductRepository implements ProductRepository {
 
   @override
   Future<Result<List<ProductModel>, String>> fetchProducts() async => result;
+
+  @override
+  List<ProductModel> getWishlist() => const [];
+
+  @override
+  Future<bool> toggleWishlist(ProductModel product) async => false;
+
+  @override
+  Future<void> clearWishlist() async {}
+
+  @override
+  bool isFavorite(String productId) => false;
 }
 
 void main() {

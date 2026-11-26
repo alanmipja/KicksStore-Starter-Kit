@@ -4,6 +4,8 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:e_commerce/app/core/theme/app_colors.dart';
+import 'package:e_commerce/app/data/local/product_local_datasource.dart';
+import 'package:e_commerce/app/data/models/product_model.dart';
 
 class StorageService extends GetxService {
   static const String _themeKey = 'is_dark_mode';
@@ -22,6 +24,15 @@ class StorageService extends GetxService {
 
     if (initHive) {
       await Hive.initFlutter();
+      if (!Hive.isAdapterRegistered(0)) {
+        Hive.registerAdapter(ProductModelAdapter());
+      }
+      await Hive.openBox<ProductModel>(
+        ProductLocalDataSourceImpl.productsBoxName,
+      );
+      await Hive.openBox<ProductModel>(
+        ProductLocalDataSourceImpl.wishlistBoxName,
+      );
     }
 
     return this;
