@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:e_commerce/app/core/theme/app_colors.dart';
+import 'package:e_commerce/app/core/services/auth_service.dart';
 import 'package:e_commerce/app/data/local/storage_service.dart';
 import 'package:e_commerce/app/modules/home/controllers/home_controller.dart';
 import 'package:e_commerce/app/modules/home/views/components/product_card.dart';
@@ -13,6 +14,149 @@ import 'package:e_commerce/app/routes/app_pages.dart';
 /// Diperbarui di Sesi 02: Menggunakan Reaktivitas GetX (.obs & Obx)
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
+
+  void _openAccount(BuildContext context) {
+    if (Get.isRegistered<AuthService>() && AuthService.to.isLoggedIn.value) {
+      _showAccountBottomSheet(context);
+    } else {
+      Get.toNamed(Routes.LOGIN);
+    }
+  }
+
+  void _showAccountBottomSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final auth = AuthService.to;
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurfaceCard : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white24 : Colors.black12,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: AppColors.primary.withAlpha(40),
+                    child: const Icon(
+                      Icons.person_rounded,
+                      color: AppColors.primary,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Obx(
+                      () => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            auth.currentUserEmail.value.isNotEmpty
+                                ? auth.currentUserEmail.value
+                                : 'Pengguna KicksStore',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            color: AppColors.success.withAlpha(30),
+                            child: const Text(
+                              'Akun Terautentikasi (Firebase)',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(height: 32),
+              ListTile(
+                leading: const Icon(
+                  Icons.receipt_long_rounded,
+                  color: AppColors.primary,
+                ),
+                title: const Text('Riwayat Pesanan'),
+                onTap: () {
+                  Get.back();
+                  Get.toNamed(Routes.ORDERS);
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.favorite_rounded,
+                  color: Colors.pinkAccent,
+                ),
+                title: const Text('Daftar Wishlist'),
+                onTap: () {
+                  Get.back();
+                  Get.toNamed(Routes.WISHLIST);
+                },
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Get.back();
+                    Get.defaultDialog(
+                      title: 'Konfirmasi Logout',
+                      middleText: 'Apakah Anda yakin ingin keluar dari akun?',
+                      textCancel: 'Batal',
+                      textConfirm: 'Ya, Keluar',
+                      confirmTextColor: Colors.white,
+                      buttonColor: AppColors.error,
+                      onConfirm: () async {
+                        await auth.logout();
+                        Get.back();
+                        Get.offAllNamed(Routes.HOME);
+                      },
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.logout_rounded,
+                    color: AppColors.error,
+                  ),
+                  label: const Text(
+                    'Keluar dari Akun',
+                    style: TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -141,15 +285,23 @@ class HomeView extends GetView<HomeController> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Halo, Sneakers Enthusiast! 👋',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
-                        ),
-                      ),
+                      Obx(() {
+                        final email = Get.isRegistered<AuthService>()
+                            ? AuthService.to.currentUserEmail.value
+                            : '';
+                        final name = email.contains('@')
+                            ? email.split('@').first
+                            : 'Sneakers Enthusiast';
+                        return Text(
+                          'Halo, $name! 👋',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
+                          ),
+                        );
+                      }),
                       const SizedBox(height: 2),
                       Text(
                         'Temukan Sepatu Impianmu',
@@ -164,7 +316,7 @@ class HomeView extends GetView<HomeController> {
                     ],
                   ),
                   InkWell(
-                    onTap: () => Get.toNamed(Routes.LOGIN),
+                    onTap: () => _openAccount(context),
                     borderRadius: BorderRadius.circular(24),
                     child: CircleAvatar(
                       radius: 22,
@@ -484,7 +636,7 @@ class HomeView extends GetView<HomeController> {
         onTap: (index) {
           if (index == 1) Get.toNamed(Routes.WISHLIST);
           if (index == 2) Get.toNamed(Routes.ORDERS);
-          if (index == 3) Get.toNamed(Routes.LOGIN);
+          if (index == 3) _openAccount(context);
         },
       ),
     );

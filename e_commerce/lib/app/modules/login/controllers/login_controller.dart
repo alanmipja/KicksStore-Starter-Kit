@@ -19,6 +19,11 @@ class LoginController extends GetxController {
     super.onInit();
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    if (AuthService.to.isLoggedIn.value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Get.offAllNamed(Routes.HOME);
+      });
+    }
   }
 
   @override
@@ -68,29 +73,42 @@ class LoginController extends GetxController {
 
     isLoading.value = true;
     try {
-      await Future.delayed(const Duration(milliseconds: 1200));
       await AuthService.to.login(
         emailController.text.trim(),
         passwordController.text,
       );
 
-      Get.snackbar(
-        'Berhasil Masuk 🎉',
-        'Selamat datang kembali di KicksStore!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-        borderRadius: 12,
-        duration: const Duration(seconds: 2),
-        icon: const Icon(Icons.check_circle_outline, color: Colors.white),
-      );
+      if (!Get.testMode && Get.overlayContext != null) {
+        Get.snackbar(
+          'Berhasil Masuk 🎉',
+          'Selamat datang kembali di KicksStore!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppColors.success,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+          duration: const Duration(seconds: 2),
+          icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+        );
+      }
       final redirectRoute = AuthService.to.redirectRoute;
       AuthService.to.redirectRoute = null;
       if (redirectRoute != null && redirectRoute.isNotEmpty) {
         Get.offAllNamed(redirectRoute);
       } else {
         Get.offAllNamed(Routes.HOME);
+      }
+    } catch (e) {
+      if (!Get.testMode && Get.overlayContext != null) {
+        Get.snackbar(
+          'Gagal Masuk',
+          AuthService.mapFirebaseAuthError(e),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppColors.error,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 3),
+        );
       }
     } finally {
       isLoading.value = false;
