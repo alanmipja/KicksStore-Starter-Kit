@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:e_commerce/app/core/theme/app_colors.dart';
+import 'package:e_commerce/app/core/services/auth_service.dart';
+import 'package:e_commerce/app/routes/app_pages.dart';
 
 class LoginController extends GetxController {
   final formKey = GlobalKey<FormState>();
@@ -67,6 +69,10 @@ class LoginController extends GetxController {
     isLoading.value = true;
     try {
       await Future.delayed(const Duration(milliseconds: 1200));
+      await AuthService.to.login(
+        emailController.text.trim(),
+        passwordController.text,
+      );
 
       Get.snackbar(
         'Berhasil Masuk 🎉',
@@ -79,7 +85,13 @@ class LoginController extends GetxController {
         duration: const Duration(seconds: 2),
         icon: const Icon(Icons.check_circle_outline, color: Colors.white),
       );
-      Get.offAllNamed('/home');
+      final redirectRoute = AuthService.to.redirectRoute;
+      AuthService.to.redirectRoute = null;
+      if (redirectRoute != null && redirectRoute.isNotEmpty) {
+        Get.offAllNamed(redirectRoute);
+      } else {
+        Get.offAllNamed(Routes.HOME);
+      }
     } finally {
       isLoading.value = false;
     }

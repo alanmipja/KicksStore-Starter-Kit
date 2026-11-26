@@ -8,27 +8,38 @@ class CartView extends GetView<CartController> {
   const CartView({super.key});
 
   void _confirmDelete(String id, String name) {
-    Get.dialog(AlertDialog(
-      title: const Text('Hapus barang?'),
-      content: Text('$name akan dihapus dari keranjang.'),
-      actions: [
-        TextButton(onPressed: Get.back, child: const Text('Batal')),
-        FilledButton(
-          onPressed: () {
-            controller.removeItem(id);
-            Get.back();
-          },
-          child: const Text('Hapus'),
-        ),
-      ],
-    ));
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Hapus barang?'),
+        content: Text('$name akan dihapus dari keranjang.'),
+        actions: [
+          TextButton(onPressed: Get.back, child: const Text('Batal')),
+          FilledButton(
+            onPressed: () {
+              controller.removeItem(id);
+              Get.back();
+            },
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _row(String label, String value, {bool bold = false}) {
-    final style = TextStyle(fontWeight: bold ? FontWeight.bold : FontWeight.normal, fontSize: bold ? 16 : 14);
+    final style = TextStyle(
+      fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+      fontSize: bold ? 16 : 14,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(children: [Text(label, style: style), const Spacer(), Text(value, style: style)]),
+      child: Row(
+        children: [
+          Text(label, style: style),
+          const Spacer(),
+          Text(value, style: style),
+        ],
+      ),
     );
   }
 
@@ -42,7 +53,11 @@ class CartView extends GetView<CartController> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.shopping_cart_outlined, size: 96, color: Colors.grey),
+                Icon(
+                  Icons.shopping_cart_outlined,
+                  size: 96,
+                  color: Colors.grey,
+                ),
                 SizedBox(height: 8),
                 Text('Keranjang masih kosong'),
               ],
@@ -69,28 +84,45 @@ class CartView extends GetView<CartController> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(item.product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                Text('Ukuran ${item.selectedSize} • ${item.product.formattedPrice}'),
+                                Text(
+                                  item.product.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Ukuran ${item.selectedSize} • ${item.product.formattedPrice}',
+                                ),
                                 Text(item.formattedSubtotal),
                               ],
                             ),
                           ),
                           Column(
                             children: [
-                              Row(children: [
-                                IconButton(
-                                  icon: const Icon(Icons.remove_circle_outline),
-                                  onPressed: () => controller.decreaseQuantity(item.id),
-                                ),
-                                Text('${item.quantity}'),
-                                IconButton(
-                                  icon: const Icon(Icons.add_circle_outline),
-                                  onPressed: () => controller.increaseQuantity(item.id),
-                                ),
-                              ]),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.remove_circle_outline,
+                                    ),
+                                    onPressed: () =>
+                                        controller.decreaseQuantity(item.id),
+                                  ),
+                                  Text('${item.quantity}'),
+                                  IconButton(
+                                    icon: const Icon(Icons.add_circle_outline),
+                                    onPressed: () =>
+                                        controller.increaseQuantity(item.id),
+                                  ),
+                                ],
+                              ),
                               IconButton(
-                                icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                onPressed: () => _confirmDelete(item.id, item.product.name),
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () =>
+                                    _confirmDelete(item.id, item.product.name),
                               ),
                             ],
                           ),
@@ -110,10 +142,12 @@ class CartView extends GetView<CartController> {
                   children: [
                     _row('Subtotal', _formatRupiah(controller.subtotal)),
                     _row('PPN 11%', _formatRupiah(controller.tax)),
-                    _row('Ongkos Kirim',
-                        controller.shippingFee == 0
-                            ? 'Gratis'
-                            : _formatRupiah(controller.shippingFee)),
+                    _row(
+                      'Ongkos Kirim',
+                      controller.shippingFee == 0
+                          ? 'Gratis'
+                          : _formatRupiah(controller.shippingFee),
+                    ),
                     const Divider(),
                     _row(
                       'Total Pembayaran',
@@ -124,8 +158,8 @@ class CartView extends GetView<CartController> {
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton(
-                        onPressed: () => Get.snackbar('Checkout', 'Pesanan diproses'),
-                        child: const Text('Checkout'),
+                        onPressed: () => Get.toNamed('/checkout'),
+                        child: const Text('Lanjut ke Pengiriman (Checkout)'),
                       ),
                     ),
                   ],
